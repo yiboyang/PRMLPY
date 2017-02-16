@@ -49,7 +49,7 @@ def expected_response(theta, X):
 
 def error(theta, X, y):
     # compute the error (cost) associated with theta; this is the negative log
-    # likelihood p(y|X, theta)
+    # likelihood p(y|X, theta), and is the objetive we wish to minimize
     # we don't use -(y*np.log(mus) + (1-y)*np.log(1-mus)).sum() to avoid
     # possibly taking the log of zero; rather, we calculate p(y|X,theta) first,
     # then take log (this has the risk of underflowing from multiplications)
@@ -60,7 +60,7 @@ def error(theta, X, y):
 
 def plot():
     fig = plt.figure()
-    # plot errors
+    # plot the error function
     ax = fig.add_subplot(121)
     plt.plot(Es)
 
@@ -97,7 +97,8 @@ for ep in range(num_epochs):
     for n in idx:   # iterate through data
         x_n, y_n = X[n], y[n]
         mu_n = expected_response(theta, x_n)
-        theta += rho*(y_n - mu_n)*x_n
+        direction = (y_n - mu_n)*x_n    # stochastic estimate negative gradient
+        theta += rho*direction
 
         thetas.append(theta.copy())
         Es.append(error(theta,X,y))
@@ -109,12 +110,12 @@ plot()
 
 
 
-# let's try batch gradient descent
+# let's try batch gradient descent with fixed step size
 
 Es = []     # history of errors
 thetas = []    # history of thetas
 theta = np.random.rand(M) - 0.5 # random in [-1,1)
-# the learning rate took many trial and errors to get "right"
+# rho (step size/ learning rate) took many trial and errors to get "right"
 # anything > 0.1 is way too big; error function staying at inf, thetas are huge
 # and not getting any better; 0.01 makes the error curve go zig-zagging (over-
 # shooting?); 0.001 finally gives a smoothly decreasing error curve and
@@ -127,8 +128,54 @@ num_epochs = 50
 for ep in range(num_epochs):
     # calculate gradient by going through all data
     mus = expected_response(theta, X)
-    grad = (y - mus).dot(X)
-    theta += rho*grad
+    direction = (y - mus).dot(X)    # negative gradient of the error function
+    theta += rho*direction
+
+    thetas.append(theta.copy())
+    Es.append(error(theta,X,y))
+
+plot()
+
+
+
+
+
+# let's try batch gradient descent, but using line-search to decide step size;
+# this is "proper" gradient descent as the objective is guaranteed to decrease
+# during each iteration
+
+def bt_line_search(f, x, g, d):
+    # input:    f: objective function to be minimized
+    #           x: a point in the domain of f
+    #           g: the gradient of f at x
+    #           d: the proposed descent direction of f at the point x
+    # output:   t: step size determined by backtracking line search
+    # More details see Boyd's Convex Optimization, p. 464
+    alpha = 0.1     # should be in (0, 0.5)
+    beta = 0.5      # should be in (0, 1)
+    t = 1
+    f_x = f(x)
+    g_dot_d = g.dot(d)
+    while f(x+t*d) > f_x + alpha*t*g_dot_d: # Armijo-Goldstein condition
+        t*=beta
+    return t
+
+fun = lambda theta: error(theta,X,y)  # the objective function solely in theta
+Es = []     # history of errors
+thetas = []    # history of thetas
+theta = np.random.rand(M) - 0.5 # random in [-1,1)
+num_epochs = 50
+
+for ep in range(num_epochs):
+    # calculate gradient by going through all data
+    mus = expected_response(theta, X)
+    direction = (y - mus).dot(X)    # negative gradient of the error function
+
+    # find a good step size in the direction chosen
+    # it happens that the direction we choose in gradient descent is
+    # (surprise!) the negative gradient
+    rho = bt_line_search(fun, theta, -direction, direction)
+    theta += rho*direction
 
     thetas.append(theta.copy())
     Es.append(error(theta,X,y))
