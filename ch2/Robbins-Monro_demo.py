@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# demo of Robbins-Monro (SGD?) algorithm for sequential estimation based on PRML 2.3.5
+# in this example we estimate the mean of a Gaussian using Maximum Likelihood
+
 N = 1000
 truemu = 0
 sigma = 2   # variance; known, fixed
