@@ -1,7 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import multivariate_normal
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
 
 
 # demo of kernel density estimator based on PRML 2.5.1
@@ -16,6 +15,7 @@ def Parzen_kernel(u):
     else:
         axis = 1
     return np.all(abs(u) <= 0.5, axis=axis)
+
 
 def Gaussian_kernel(u):
     # Gaussian kernel, standard normal Gaussian in D-dim
@@ -38,19 +38,19 @@ def kernel_density(x, X, k, h):
     # k: kernel function
     # h: bandwidth for the kernel (length of the side of hypercube)
     N, D = X.shape
-    #K = 0   # "count" of observations in the hypercube centered at x
-    #for x_n in X:
+    # K = 0   # "count" of observations in the hypercube centered at x
+    # for x_n in X:
     #    K += k((x-x_n)/h)
 
     # more efficient implementation
-    K = k((x-X)/h).sum()
-    return K / (N * h**D)     # (2.246)
+    K = k((x - X) / h).sum()
+    return K / (N * h ** D)  # (2.246)
 
 
 N = 100
-D = 2   # 2D data for demo
+D = 2  # 2D data for demo
 X = np.random.rand(N, D)
-plt.scatter(X[:,0], X[:,1])
+plt.scatter(X[:, 0], X[:, 1])
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -58,8 +58,8 @@ x = y = np.arange(X.min(), X.max(), 0.05)
 
 xx, yy = np.meshgrid(x, y)
 k = Gaussian_kernel
-h = 0.1 # 0.2 is much smoother
-zs = np.array([kernel_density([x,y],X,k,h) for x,y in zip(np.ravel(xx), np.ravel(yy))])
+h = 0.1  # 0.2 is much smoother
+zs = np.array([kernel_density([x, y], X, k, h) for x, y in zip(np.ravel(xx), np.ravel(yy))])
 zz = zs.reshape(xx.shape)
 
-ax.plot_wireframe(xx,yy,zz)
+ax.plot_wireframe(xx, yy, zz)
