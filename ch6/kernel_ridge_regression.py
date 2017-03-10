@@ -4,6 +4,7 @@ import numpy as np
 
 # demo of kernel ridge regression based on PRML 6.1
 # exactly what it sounds like--ridge regression with kernels; does not yield sparse solutions
+# we perform regression on sinusoidal data with polynomial kernel
 
 def polynomial_kernel(x, y, d):
     """d-degree polynomial kernel; linear regression uses d=1"""
@@ -16,7 +17,7 @@ def gaussian_kernel(x, y, c):
 
 
 def gram(X, k):
-    """compute the gram matrix, given a data matrix X and kernel k; K^2 time complexity"""
+    """compute the Gram matrix, given a data matrix X and kernel k; K^2 time complexity"""
     N = len(X)
     K = np.empty((N, N))
     for i in range(N):
@@ -26,15 +27,15 @@ def gram(X, k):
     return K
 
 
-def predict(X, test, a, kernel):
+def predict(test, X, k, a):
     """Form predictions on a test set.
     :param X: matrix of training data
     :param test: matrix of test data
     :param a: optimal dual variables (weights)
-    :param kernel: kernel used"""
+    :param k: kernel used"""
     y = np.empty(len(test))  # y is the array of predictions
     for i, s in enumerate(test):  # eq (6.9)
-        k_s = np.array([kernel(x, s) for x in X])  # the new data point's kernel evaluation with all training data
+        k_s = np.array([k(x, s) for x in X])  # the new data point's kernel evaluation with all training data
         y[i] = a.dot(k_s)
     return y
 
@@ -55,14 +56,14 @@ K = gram(X, kernel)
 a = np.linalg.solve((K + lamb * np.eye(N)), t)  # eq (6.8), the optimal dual variables
 
 # prediction
-y = predict(X, X, a, kernel)  # for simplicity, let's predict the training data, just to see how well we did
+y = predict(X, X, kernel, a)  # for simplicity, let's predict the training data, just to see how well we did
 
 # plots
 plt.plot(X, true_t, color='r', label='data generating function')  # the true data generating function
 plt.scatter(X, t, color='b', label='training observations')  # the noisy training data points
 plt.scatter(X, y, color='c', label='predictions')  # our predictions on training data
 
-plt.title("Kernel Ridge Regression")
+plt.title("Kernel Ridge Regression with Polynomial Kernel")
 plt.xlabel("input")
 plt.ylabel("output")
 plt.legend(loc='best')
