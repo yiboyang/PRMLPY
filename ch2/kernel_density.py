@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d, Axes3D
 import numpy as np
 from scipy.stats import multivariate_normal
 
@@ -63,3 +64,9 @@ zs = np.array([kernel_density([x, y], X, k, h) for x, y in zip(np.ravel(xx), np.
 zz = zs.reshape(xx.shape)
 
 ax.plot_wireframe(xx, yy, zz)
+
+ax.set_title("Kernel Density Estimation")
+ax.set_xlabel("$x_1$")
+ax.set_ylabel("$x_2$")
+ax.set_zlabel("probability density")
+plt.savefig(__file__.split('.')[0] + '.png')

@@ -3,7 +3,10 @@ import numpy as np
 
 
 # demo of kernel ridge regression based on PRML 6.1
-# exactly what it sounds like--ridge regression with kernels; does not yield sparse solutions
+# exactly what it sounds like--ridge regression with kernels, equivalent to
+# pre-processing the input by feature map then performing ordinary ridge
+# regression to learn a linear function in the feature space; does not yield
+# sparse solutions like SVM
 # we perform regression on sinusoidal data with polynomial kernel
 
 def polynomial_kernel(x, y, d):
@@ -40,7 +43,6 @@ def predict(test, X, k, a):
     return y
 
 
-# we use the sinusoidal data set from chapter 1
 X = np.arange(0, 1, 0.01)
 N = len(X)
 sigma = np.random.normal(loc=0, scale=0.1, size=N)  # 0 mean Gaussian noise
@@ -49,7 +51,7 @@ t = true_t + sigma  # noisy targets; these are what we actually observe
 
 # settings
 lamb = 0.001  # regularizer; smoothness penalty; needs cross-validation to get it right
-kernel = lambda x, y: polynomial_kernel(x, y, 3)  # let's use 3rd degree polynomial kernel
+kernel = lambda x, y: polynomial_kernel(x, y, 3)  # 3rd degree polynomial kernel is sufficient
 
 # "training" (solution has closed form)
 K = gram(X, kernel)

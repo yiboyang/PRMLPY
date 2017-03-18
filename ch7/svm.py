@@ -133,8 +133,8 @@ zs = predict(np.array(list(zip(np.ravel(xx), np.ravel(yy)))), X, t, kernel, a, b
 zz = zs.reshape(xx.shape)
 CS = plt.contour(xx, yy, zz, levels=[-1, 0, 1], )  # margin, separating hyperplane, margin
 plt.clabel(CS, fmt='%2.1d', colors='k')
-plt.xlabel("x_1")
-plt.ylabel("x_2")
+plt.xlabel("$x_1$")
+plt.ylabel("$x_2$")
 plt.legend(loc='best')
 plt.title("SVM Classification of XOR Data with Gaussian Kernel")
 plt.savefig(__file__.split('.')[0] + '.png')

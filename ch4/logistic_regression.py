@@ -92,8 +92,8 @@ def plot_results(Es, thetas, X, y):
     plt.scatter(X[y == 0][:, 1], X[y == 0][:, 2], color='r')
     plt.scatter(X[y == 1][:, 1], X[y == 1][:, 2], color='g')
     plt.title("Logistic Regression on Iris Data")
-    plt.xlabel("x_1")
-    plt.ylabel("x_2")
+    plt.xlabel("$x_1$")
+    plt.ylabel("$x_2$")
     plt.legend(loc='best')
 
     fig.add_subplot(224)    # empty plot for overall spacing
