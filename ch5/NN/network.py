@@ -48,7 +48,8 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
-                print("Epoch {} : {} / {}".format(j, self.evaluate(test_data), n_test))
+                eval = self.evaluate(test_data)
+                print("Epoch {} : {} / {}, loss = {}".format(j, eval[0], n_test, eval[1]))
             else:
                 print("Epoch {} complete".format(j))
 
@@ -76,7 +77,7 @@ class Network(object):
             if i == len(self.weights)-1: # last layer
                 z = softmax(a)
             else:
-                z = ReLU(a)
+                z = sigmoid(a)
         return z
 
     def backprop(self, x, t):
@@ -95,7 +96,7 @@ class Network(object):
             if i == len(self.weights) - 1: # last layer uses softmax
                 z = softmax(a)
             else:
-                z = ReLU(a)
+                z = sigmoid(a)
             activations.append(a)
 
         # backwards error propagation
@@ -103,7 +104,7 @@ class Network(object):
         delta = last_activation_error(z, t)  # derivatives with respect to the last (linear) activation (5.54)
         deltas = [delta]    # list of derivatives w.r.t activations
         for w, a in zip(self.weights[::-1], activations[-2::-1]):
-            back_derivatives = ReLU_prime(a)  # using the previous layer's activation derivative
+            back_derivatives = sigmoid_prime(a)  # using the previous layer's activation derivative
             back_errors = np.dot(w.T[1:], delta)  # bias weight is not involved in error inner-prod computation
             delta = back_derivatives * back_errors  # (5.56); a vector of delta_js for hidden units
             deltas.append(delta)
@@ -117,12 +118,18 @@ class Network(object):
 
     def evaluate(self, test_data):
         """Return the number of test inputs for which the neural
-        network outputs the correct result. Note that the neural
+        network outputs the correct result, as well as total loss. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
-        test_results = [(np.argmax(self.feedforward(x)), y)
-                        for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results)
+        test_loss = test_num_correct = 0
+        for (x, t) in test_data:
+            pred = self.feedforward(x)
+            test_loss += -np.log(pred[t])   # cross-entropy cost for categorical output
+            test_num_correct += int(np.argmax(pred) == t)
+
+        # test_results = [np.argmax(self.feedforward(x)) for (x, y) in test_data]
+        # return sum(int(x == y) for (x, y) in test_results)
+        return test_num_correct, test_loss
 
 
 #### Miscellaneous functions
@@ -134,11 +141,6 @@ def prepend_bias_unit(a):
     """We fold the bias parameters into weights, so activation computed from each layer (except output layer)
     needs to be prefixed with a dummy input unit clamped at 1"""
     return np.vstack(([1], a))  # prepend bias unit as the zeroth element
-
-def single_cost(y, t):
-    """Calculate cost of prediction y, given target one-hot vector t"""
-    # here we use cross-entropy error; y is a vector of class probabilities
-    return -np.log(y[t==1])
 
 def last_activation_error(y, t):
     """Compute cost derivatives with respect to the last activation dLdz; y is the vector of class scores (unnormalized
