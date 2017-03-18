@@ -21,7 +21,7 @@ class Network(object):
 
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.weights = [np.random.randn(y, x + 1)
+        self.weights = [np.hstack((np.random.randn(y, 1), np.random.randn(y, x)/np.sqrt(x)))    # init bias separately
                         for x, y in zip(sizes[:-1], sizes[1:])]
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
@@ -154,7 +154,7 @@ def ReLU(z):
 def ReLU_prime(z):
     """Element-wise derivatives of ReLU with respect to input vector"""
     result = np.zeros_like(z)
-    result[result>0] = 1
+    result[z>0] = 1
     return result
 
 def softmax(z):
