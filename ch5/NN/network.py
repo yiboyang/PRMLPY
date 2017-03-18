@@ -77,7 +77,7 @@ class Network(object):
             if i == len(self.weights)-1: # last layer
                 z = softmax(a)
             else:
-                z = sigmoid(a)
+                z = ReLU(a)
         return z
 
     def backprop(self, x, t):
@@ -96,7 +96,7 @@ class Network(object):
             if i == len(self.weights) - 1: # last layer uses softmax
                 z = softmax(a)
             else:
-                z = sigmoid(a)
+                z = ReLU(a)
             activations.append(a)
 
         # backwards error propagation
@@ -104,7 +104,7 @@ class Network(object):
         delta = last_activation_error(z, t)  # derivatives with respect to the last (linear) activation (5.54)
         deltas = [delta]    # list of derivatives w.r.t activations
         for w, a in zip(self.weights[::-1], activations[-2::-1]):
-            back_derivatives = sigmoid_prime(a)  # using the previous layer's activation derivative
+            back_derivatives = ReLU_prime(a)  # using the previous layer's activation derivative
             back_errors = np.dot(w.T[1:], delta)  # bias weight is not involved in error inner-prod computation
             delta = back_derivatives * back_errors  # (5.56); a vector of delta_js for hidden units
             deltas.append(delta)
