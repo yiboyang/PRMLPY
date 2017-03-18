@@ -2,8 +2,9 @@ import random
 import numpy as np
 from scipy.special import expit as sigmoid
 
-# A generic feedforward neural network; backprop implemented using Bishop's equations;
-# based on https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/src/network.py
+# A generic feedforward neural network; backprop implemented using Bishop's equations.
+# based on https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/src/network.py, except using
+# a proper softmax output layer (rather than sigmoid layer) for classification
 
 class Network(object):
     def __init__(self, sizes):
@@ -69,31 +70,37 @@ class Network(object):
         from previous layer (or simply the data input, when there's no previous layer)
         """
 
-        for w in self.weights:
-            z = add_bias_unit(z)  # dummy input for bias
+        for i,w in enumerate(self.weights):
+            z = prepend_bias_unit(z)  # dummy input for bias
             a = np.dot(w, z)  # activation (i.e. weighted inputs), (5.2/5.8)
-            z = sigmoid(a)  # apply activation function to get output, (5.3)
+            if i == len(self.weights)-1: # last layer
+                z = softmax(a)
+            else:
+                z = sigmoid(a)
         return z
 
     def backprop(self, x, t):
         """Return a list of ndarrays the same shapes as those of self.weights
         containing the partial derivatives w.r.t weights, i.e. the gradient of
-        the cost function C_x. """
+        the cost function C_x. x is a column (input) vector, t is a vector （one-hot) target"""
 
         # feedforward
         z = x
         zs = []  # list of layer outputs (including the "outputs" of the 0th (network input) layer
         activations = []    # list of weighted inputs (i.e. activations)
-        for w in self.weights:
-            z = add_bias_unit(z)  # dummy input for bias
+        for i,w in enumerate(self.weights):
+            z = prepend_bias_unit(z)  # dummy input for bias
             zs.append(z)
             a = np.dot(w, z)  # activation (i.e. weighted inputs), (5.2/5.8)
-            z = sigmoid(a)  # apply activation function to get output, (5.3)
+            if i == len(self.weights) - 1: # last layer uses softmax
+                z = softmax(a)
+            else:
+                z = sigmoid(a)
             activations.append(a)
 
         # backwards error propagation
         y = z  # network (last layer) output
-        delta = output_error(y, t)  # output layer error defined by cost function, (5.54)
+        delta = last_activation_error(z, t)  # derivatives with respect to the last (linear) activation (5.54)
         deltas = [delta]    # list of derivatives w.r.t activations
         for w, a in zip(self.weights[::-1], activations[-2::-1]):
             back_derivatives = sigmoid_prime(a)  # using the previous layer's activation derivative
@@ -123,19 +130,32 @@ def sigmoid_prime(z):
     """Derivative of the logistic sigmoid function."""
     return sigmoid(z) * (1 - sigmoid(z))
 
-
-def add_bias_unit(a):
+def prepend_bias_unit(a):
     """We fold the bias parameters into weights, so activation computed from each layer (except output layer)
     needs to be prefixed with a dummy input unit clamped at 1"""
     return np.vstack(([1], a))  # prepend bias unit as the zeroth element
 
-
 def single_cost(y, t):
-    """Calculate cost of prediction y, given target t"""
-    # here we use L2 norm
-    return np.square(y-t).sum()
+    """Calculate cost of prediction y, given target one-hot vector t"""
+    # here we use cross-entropy error; y is a vector of class probabilities
+    return -np.log(y[t==1])
 
+def last_activation_error(y, t):
+    """Compute cost derivatives with respect to the last activation dLdz; y is the vector of class scores (unnormalized
+    log probabilities, y is the output vector of normalized class probabilities, t is the target 10x1 vector. """
+    return y - t  # works for canonical response outputs (e.g. softmax/logistic/identity outputs with cross-entropy)
 
-def output_error(y, t):
-    """Compute error (cost derivative) at the output layer; y is the network prediction, t is the target"""
-    return y - t  # works for canonical response
+def ReLU(z):
+    """Apply rectified linear unit on given vector"""
+    return np.maximum(0., z)
+
+def ReLU_prime(z):
+    """Element-wise derivatives of ReLU with respect to input vector"""
+    result = np.zeros_like(z)
+    result[result>0] = 1
+    return result
+
+def softmax(z):
+    """Compute the softmax of a vector (containing unnormalized log likelihood"""
+    z-=z.max()  # to avoid numeric problems with exp
+    return np.exp(z)/np.sum(np.exp(z))
