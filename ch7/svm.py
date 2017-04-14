@@ -14,7 +14,7 @@ def gaussian_kernel(x, y, c):
 
 
 def gram(X, k):
-    """compute the Gram matrix, given a data matrix X and kernel k; K^2 time complexity"""
+    """compute the Gram matrix, given a data matrix X and kernel k; N^2 time complexity"""
     N = len(X)
     K = np.empty((N, N))
     for i in range(N):
@@ -113,9 +113,9 @@ for n in margin_idx:
 b = cum_b / len(margin_idx)
 
 # points with a==C may be misclassified (these are the only points that may be misclassified)
-possible_wrong_idx = np.where(a == C)[0]
-possibly_wrong_predictions = predict(X[possible_wrong_idx], X, t, kernel, a, b)
-num_wrong = np.sum((possibly_wrong_predictions * t[possible_wrong_idx]) < 0)
+possibly_wrong_idx = np.where(a == C)[0]
+possibly_wrong_predictions = predict(X[possibly_wrong_idx], X, t, kernel, a, b)
+num_wrong = np.sum((possibly_wrong_predictions * t[possibly_wrong_idx]) < 0)
 print('Classification accuracy: ' + str(1 - num_wrong / N))
 
 # plots
